@@ -20,18 +20,22 @@ export default function Home() {
   const [userName, setUserName] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const graphicRef = useRef<HTMLDivElement>(null);
-  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const [glowing, setGlowing] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const [previewScale, setPreviewScale] = useState(0.5);
+  const [cardScale, setCardScale] = useState(1);
 
   const filledCount = songs.filter((s) => s.trim()).length;
 
+  // Scale the 1080×1080 card to fit the viewport
   useEffect(() => {
     const updateScale = () => {
-      if (previewContainerRef.current) {
-        const containerWidth = previewContainerRef.current.offsetWidth;
-        setPreviewScale(containerWidth / 1080);
+      if (containerRef.current) {
+        const vw = containerRef.current.offsetWidth;
+        // On mobile, use nearly full width; on desktop, cap at a nice size
+        const maxCardDisplay = Math.min(vw - 32, 580);
+        setCardScale(maxCardDisplay / 1080);
       }
     };
     updateScale();
@@ -55,11 +59,7 @@ export default function Home() {
         e.preventDefault();
         inputRefs.current[index + 1]?.focus();
       }
-      if (
-        e.key === "Backspace" &&
-        songs[index] === "" &&
-        index > 0
-      ) {
+      if (e.key === "Backspace" && songs[index] === "" && index > 0) {
         e.preventDefault();
         inputRefs.current[index - 1]?.focus();
       }
@@ -86,23 +86,24 @@ export default function Home() {
 
       // --- Title ---
       ctx.textAlign = "center";
+      ctx.textBaseline = "alphabetic";
       ctx.fillStyle = "#5B2D8E";
       ctx.font = 'italic 900 72px "Playfair Display", serif';
       ctx.fillText("#My10PrinceSongs", S / 2, 108);
 
       // --- Divider line (gradient) ---
       const grad = ctx.createLinearGradient(80, 0, S - 80, 0);
-      grad.addColorStop(0, "transparent");
+      grad.addColorStop(0, "rgba(196, 164, 222, 0)");
       grad.addColorStop(0.2, "#C4A4DE");
       grad.addColorStop(0.5, "#7B4FAF");
       grad.addColorStop(0.8, "#C4A4DE");
-      grad.addColorStop(1, "transparent");
+      grad.addColorStop(1, "rgba(196, 164, 222, 0)");
       ctx.fillStyle = grad;
-      ctx.fillRect(80, 132, S - 160, 2);
+      ctx.fillRect(80, 134, S - 160, 2);
 
       // --- Song list ---
-      const listTop = 192;
-      const listBottom = S - 160;
+      const listTop = 190;
+      const listBottom = S - 150;
       const rowHeight = (listBottom - listTop) / 10;
 
       ctx.textBaseline = "middle";
@@ -119,14 +120,9 @@ export default function Home() {
 
         // Song name
         ctx.textAlign = "left";
-        if (songText) {
-          ctx.fillStyle = "#5B2D8E";
-          ctx.font = '400 32px "Inter", sans-serif';
-        } else {
-          ctx.fillStyle = "#D8CCE5";
-          ctx.font = '400 32px "Inter", sans-serif';
-        }
-        ctx.fillText(songText || PLACEHOLDER_SONGS[i], 172, y);
+        ctx.fillStyle = songText ? "#5B2D8E" : "#D8CCE5";
+        ctx.font = '400 32px "Inter", sans-serif';
+        ctx.fillText(songText || PLACEHOLDER_SONGS[i], 176, y);
       }
 
       // --- User name (bottom left) ---
@@ -135,12 +131,12 @@ export default function Home() {
         ctx.textBaseline = "bottom";
         ctx.fillStyle = "#5B2D8E";
         ctx.font = '500 26px "Inter", sans-serif';
-        ctx.fillText(userName, 80, S - 60);
+        ctx.fillText(userName, 80, S - 52);
       }
 
       // --- Purple Highs logo (bottom right) ---
-      const logoX = S - 140;
-      const logoY = S - 118;
+      const logoX = S - 138;
+      const logoY = S - 110;
       const innerR = 50;
       const outerR = 58;
 
@@ -170,6 +166,10 @@ export default function Home() {
       ctx.font = 'italic 700 20px "Playfair Display", serif';
       ctx.fillText("Highs", logoX, logoY + 14);
 
+      // --- Glow effect on card ---
+      setGlowing(true);
+      setTimeout(() => setGlowing(false), 800);
+
       // --- Download ---
       canvas.toBlob((blob) => {
         if (!blob) return;
@@ -182,58 +182,124 @@ export default function Home() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         setGenerated(true);
+        setIsGenerating(false);
       }, "image/png");
     } catch {
       alert("Something went wrong generating your image. Please try again.");
-    } finally {
       setIsGenerating(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f6fb]">
-      {/* Header */}
-      <header className="w-full bg-white border-b border-purple-100">
-        <div className="max-w-6xl mx-auto px-4 py-4 sm:py-6 flex items-center justify-between">
-          <div>
-            <h1
-              className="text-2xl sm:text-3xl font-bold text-[#5B2D8E]"
-              style={{ fontFamily: "var(--font-playfair), 'Playfair Display', serif" }}
+    <div className="bg-atmosphere min-h-screen min-h-dvh flex flex-col items-center">
+      {/* Top tagline */}
+      <div className="animate-fade-in pt-8 sm:pt-12 pb-2 text-center px-4">
+        <p className="text-purple-muted/70 text-sm tracking-[0.2em] uppercase">
+          10-Year Anniversary &middot; April 21, 2026
+        </p>
+      </div>
+
+      {/* Prompt */}
+      <div className="animate-fade-up-delay text-center px-6 pb-6 sm:pb-8 max-w-md">
+        <p className="text-purple-muted/90 text-base leading-relaxed">
+          Tap any line. Type your picks. Download &amp; share.
+        </p>
+      </div>
+
+      {/* The Card — this IS the interface */}
+      <div
+        ref={containerRef}
+        className="w-full flex justify-center px-4"
+      >
+        <div
+          style={{
+            width: 1080 * cardScale,
+            height: 1080 * cardScale,
+          }}
+        >
+          <div
+            ref={cardRef}
+            className={`graphic-card ${glowing ? "glow-pulse" : ""}`}
+            style={{
+              width: 1080,
+              height: 1080,
+              transform: `scale(${cardScale})`,
+              transformOrigin: "top left",
+            }}
+          >
+            {/* Inner content of the graphic */}
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                padding: "72px 80px 52px",
+                boxSizing: "border-box",
+              }}
             >
-              #My10PrinceSongs
-            </h1>
-            <p className="text-sm text-[#7B4FAF] mt-0.5">
-              10-Year Anniversary &middot; April 21, 2026
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <PurpleRainIcon />
-          </div>
-        </div>
-      </header>
+              {/* Title */}
+              <div style={{ textAlign: "center", marginBottom: "8px" }}>
+                <h1
+                  style={{
+                    fontFamily: "var(--font-playfair), 'Playfair Display', serif",
+                    fontSize: 72,
+                    fontWeight: 900,
+                    fontStyle: "italic",
+                    color: "#5B2D8E",
+                    margin: 0,
+                    lineHeight: 1.1,
+                  }}
+                >
+                  #My10PrinceSongs
+                </h1>
+              </div>
 
-      <main className="max-w-6xl mx-auto px-4 py-6 sm:py-10">
-        {/* Intro */}
-        <div className="text-center mb-8 sm:mb-10">
-          <p className="text-[#5B2D8E] text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">
-            What are your Top 10 Prince songs? Enter them below, download your
-            graphic, and share it with{" "}
-            <span className="font-semibold">#My10PrinceSongs</span>
-          </p>
-        </div>
+              {/* Divider */}
+              <div
+                style={{
+                  width: "100%",
+                  height: 2,
+                  background:
+                    "linear-gradient(90deg, transparent, #C4A4DE 20%, #7B4FAF 50%, #C4A4DE 80%, transparent)",
+                  marginBottom: 36,
+                }}
+              />
 
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start justify-center">
-          {/* Input Panel */}
-          <div className="w-full lg:w-[380px] order-2 lg:order-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-5 sm:p-6">
-              <h2 className="text-sm font-semibold text-[#5B2D8E] uppercase tracking-wider mb-4">
-                Your Top 10
-              </h2>
-
-              <div className="space-y-2">
+              {/* Song list — each row is an input */}
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  gap: 2,
+                  paddingLeft: 32,
+                }}
+              >
                 {songs.map((song, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-[#5B2D8E] w-6 text-right tabular-nums">
+                  <div
+                    key={i}
+                    className="song-row"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 14,
+                      height: 68,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "var(--font-inter), 'Inter', sans-serif",
+                        fontSize: 28,
+                        fontWeight: 400,
+                        color: "#5B2D8E",
+                        width: 48,
+                        textAlign: "right",
+                        flexShrink: 0,
+                        userSelect: "none",
+                      }}
+                    >
                       {i + 1}.
                     </span>
                     <input
@@ -245,369 +311,167 @@ export default function Home() {
                       onChange={(e) => handleSongChange(i, e.target.value)}
                       onKeyDown={(e) => handleKeyDown(i, e)}
                       placeholder={PLACEHOLDER_SONGS[i]}
-                      className="flex-1 px-3 py-2 text-sm border border-purple-100 rounded-lg focus:border-[#5B2D8E] focus:ring-1 focus:ring-[#5B2D8E]/20 bg-white text-[#3D1A5E] placeholder:text-purple-200"
-                      maxLength={60}
+                      className="song-input"
+                      style={{ fontSize: 32 }}
+                      maxLength={50}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      spellCheck={false}
                     />
                   </div>
                 ))}
               </div>
 
-              <div className="mt-5 pt-4 border-t border-purple-50">
-                <label className="text-sm font-semibold text-[#5B2D8E] uppercase tracking-wider block mb-2">
-                  Your Name / Handle{" "}
-                  <span className="text-purple-300 font-normal normal-case tracking-normal">
-                    (optional)
-                  </span>
-                </label>
-                <input
-                  type="text"
-                  value={userName}
-                  onChange={(e) => {
-                    setUserName(e.target.value);
-                    setGenerated(false);
-                  }}
-                  placeholder="@yourhandle"
-                  className="w-full px-3 py-2 text-sm border border-purple-100 rounded-lg focus:border-[#5B2D8E] focus:ring-1 focus:ring-[#5B2D8E]/20 bg-white text-[#3D1A5E] placeholder:text-purple-200"
-                  maxLength={40}
-                />
-              </div>
-
-              {/* Progress */}
-              <div className="mt-4">
-                <div className="flex justify-between text-xs text-[#7B4FAF] mb-1.5">
-                  <span>{filledCount}/10 songs</span>
-                  {filledCount === 10 && (
-                    <span className="text-[#5B2D8E] font-semibold">
-                      Ready!
-                    </span>
-                  )}
-                </div>
-                <div className="h-1.5 bg-purple-50 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#5B2D8E] to-[#7B4FAF] rounded-full"
-                    style={{
-                      width: `${(filledCount / 10) * 100}%`,
-                      transition: "width 300ms ease",
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Download Button */}
-              <button
-                onClick={handleDownload}
-                disabled={filledCount === 0 || isGenerating}
-                className={`mt-5 w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                  filledCount === 0
-                    ? "bg-purple-100 text-purple-300 cursor-not-allowed"
-                    : isGenerating
-                      ? "bg-[#5B2D8E] text-white opacity-70 cursor-wait"
-                      : generated
-                        ? "bg-green-600 text-white hover:bg-green-700"
-                        : "bg-[#5B2D8E] text-white hover:bg-[#3D1A5E] shadow-lg hover:shadow-xl pulse-purple"
-                }`}
-              >
-                {isGenerating
-                  ? "Generating..."
-                  : generated
-                    ? "Downloaded! Click to download again"
-                    : "Download PNG"}
-              </button>
-
-              {filledCount > 0 && filledCount < 10 && (
-                <p className="text-xs text-center text-[#7B4FAF] mt-2">
-                  You can download with any number of songs
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Live Preview */}
-          <div className="w-full lg:flex-1 lg:min-w-0 order-1 lg:order-2 flex flex-col items-center overflow-hidden">
-            <h2 className="text-sm font-semibold text-[#5B2D8E] uppercase tracking-wider mb-3">
-              Live Preview
-            </h2>
-
-            {/* Preview container - responsive sizing */}
-            <div
-              ref={previewContainerRef}
-              className="w-full max-w-[540px] relative rounded-2xl shadow-lg overflow-hidden border border-purple-100"
-              style={{ aspectRatio: "1/1" }}
-            >
+              {/* Bottom row: name + logo */}
               <div
                 style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "1080px",
-                  height: "1080px",
-                  transform: `scale(${previewScale})`,
-                  transformOrigin: "top left",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-end",
+                  marginTop: 24,
                 }}
               >
-                <GraphicTemplate
-                  songs={songs}
-                  userName={userName}
-                  ref={graphicRef}
-                />
+                {/* User name input */}
+                <div style={{ flex: 1, maxWidth: 400 }}>
+                  <input
+                    type="text"
+                    value={userName}
+                    onChange={(e) => {
+                      setUserName(e.target.value);
+                      setGenerated(false);
+                    }}
+                    placeholder="your name or @handle"
+                    className="name-input"
+                    style={{ fontSize: 26 }}
+                    maxLength={40}
+                    autoComplete="off"
+                  />
+                </div>
+
+                {/* Purple Highs Logo */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 100,
+                      height: 100,
+                      borderRadius: "50%",
+                      border: "3px solid #5B2D8E",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      position: "relative",
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: "absolute",
+                        width: 116,
+                        height: 116,
+                        borderRadius: "50%",
+                        border: "2px solid #C4A4DE",
+                        top: -11,
+                        left: -11,
+                      }}
+                    />
+                    <div style={{ textAlign: "center", lineHeight: 1.1 }}>
+                      <span
+                        style={{
+                          fontFamily:
+                            "var(--font-playfair), 'Playfair Display', serif",
+                          fontSize: 20,
+                          fontStyle: "italic",
+                          fontWeight: 700,
+                          color: "#5B2D8E",
+                          display: "block",
+                        }}
+                      >
+                        Purple
+                      </span>
+                      <span
+                        style={{
+                          fontFamily:
+                            "var(--font-playfair), 'Playfair Display', serif",
+                          fontSize: 20,
+                          fontStyle: "italic",
+                          fontWeight: 700,
+                          color: "#C4A84D",
+                          display: "block",
+                        }}
+                      >
+                        Highs
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <p className="text-xs text-[#7B4FAF] mt-3 text-center">
-              The downloaded image will be 1080&times;1080px — perfect for
-              Instagram
-            </p>
           </div>
         </div>
-      </main>
+      </div>
+
+      {/* Download area — below the card */}
+      <div className="w-full max-w-md px-6 pt-6 sm:pt-8 pb-4 animate-fade-up-delay flex flex-col items-center gap-3">
+        <button
+          onClick={handleDownload}
+          disabled={filledCount === 0 || isGenerating}
+          className={`btn-download w-full py-4 px-6 rounded-2xl text-base tracking-wide ${
+            generated ? "btn-success" : ""
+          }`}
+        >
+          {isGenerating
+            ? "Creating your image..."
+            : generated
+              ? "Saved! Tap to download again"
+              : filledCount === 0
+                ? "Enter your songs above"
+                : "Download PNG"}
+        </button>
+
+        {generated && (
+          <p className="text-purple-muted/80 text-sm text-center animate-fade-in">
+            Now post it with{" "}
+            <span
+              className="text-purple-muted font-semibold cursor-pointer hover:text-white transition-colors"
+              onClick={() => {
+                navigator.clipboard.writeText("#My10PrinceSongs");
+              }}
+              title="Click to copy"
+            >
+              #My10PrinceSongs
+            </span>{" "}
+            <span className="text-purple-muted/50">(tap to copy)</span>
+          </p>
+        )}
+
+        {!generated && filledCount > 0 && filledCount < 10 && (
+          <p className="text-purple-muted/50 text-xs text-center">
+            {filledCount}/10 &mdash; you can download anytime
+          </p>
+        )}
+      </div>
 
       {/* Footer */}
-      <footer className="mt-12 py-6 text-center border-t border-purple-50 bg-white">
-        <p className="text-sm text-[#7B4FAF]">
-          Celebrating the legacy of Prince &middot;{" "}
-          <span className="font-semibold">#My10PrinceSongs</span>
-        </p>
-        <p className="text-xs text-purple-300 mt-1">
+      <div className="mt-auto pt-8 pb-6 text-center">
+        <p className="text-purple-muted/30 text-xs">
           Created by{" "}
           <a
             href="https://instagram.com/djdudleyd"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:text-[#5B2D8E]"
+            className="hover:text-purple-muted/60 transition-colors"
           >
             @djdudleyd
           </a>{" "}
           &middot; Purple Highs
         </p>
-      </footer>
-
-    </div>
-  );
-}
-
-/* =====================================================
-   THE GRAPHIC TEMPLATE (1080x1080)
-   This is what gets rendered to PNG
-   ===================================================== */
-import { forwardRef } from "react";
-
-const GraphicTemplate = forwardRef<
-  HTMLDivElement,
-  { songs: string[]; userName: string }
->(function GraphicTemplate({ songs, userName }, ref) {
-  return (
-    <div
-      ref={ref}
-      style={{
-        width: "1080px",
-        height: "1080px",
-        background: "#ffffff",
-        display: "flex",
-        flexDirection: "column",
-        padding: "72px 80px 60px",
-        boxSizing: "border-box",
-        position: "relative",
-        fontFamily: "var(--font-inter), 'Inter', sans-serif",
-      }}
-    >
-      {/* Title */}
-      <div style={{ textAlign: "center", marginBottom: "8px" }}>
-        <h1
-          style={{
-            fontFamily: "var(--font-playfair), 'Playfair Display', serif",
-            fontSize: "72px",
-            fontWeight: 900,
-            fontStyle: "italic",
-            color: "#5B2D8E",
-            margin: 0,
-            lineHeight: 1.1,
-          }}
-        >
-          #My10PrinceSongs
-        </h1>
-      </div>
-
-      {/* Divider line */}
-      <div
-        style={{
-          width: "100%",
-          height: "2px",
-          background:
-            "linear-gradient(90deg, transparent, #C4A4DE 20%, #7B4FAF 50%, #C4A4DE 80%, transparent)",
-          marginBottom: "40px",
-        }}
-      />
-
-      {/* Song list */}
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          gap: "6px",
-          paddingLeft: "40px",
-        }}
-      >
-        {songs.map((song, i) => (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              alignItems: "baseline",
-              gap: "16px",
-              minHeight: "54px",
-            }}
-          >
-            <span
-              style={{
-                fontFamily: "var(--font-inter), 'Inter', sans-serif",
-                fontSize: "28px",
-                fontWeight: 400,
-                color: "#5B2D8E",
-                width: "48px",
-                textAlign: "right",
-                flexShrink: 0,
-              }}
-            >
-              {i + 1}.
-            </span>
-            <span
-              style={{
-                fontFamily: "var(--font-inter), 'Inter', sans-serif",
-                fontSize: "32px",
-                fontWeight: 400,
-                color: song.trim() ? "#5B2D8E" : "#D8CCE5",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              {song.trim() || PLACEHOLDER_SONGS[i]}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Bottom section */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          marginTop: "32px",
-        }}
-      >
-        {/* User name */}
-        <div>
-          {userName.trim() && (
-            <p
-              style={{
-                fontFamily: "var(--font-inter), 'Inter', sans-serif",
-                fontSize: "26px",
-                fontWeight: 500,
-                color: "#5B2D8E",
-                margin: 0,
-                lineHeight: 1.4,
-              }}
-            >
-              {userName}
-            </p>
-          )}
-        </div>
-
-        {/* Purple Highs Logo */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <div
-            style={{
-              width: "100px",
-              height: "100px",
-              borderRadius: "50%",
-              border: "3px solid #5B2D8E",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-            }}
-          >
-            {/* Outer decorative ring */}
-            <div
-              style={{
-                position: "absolute",
-                width: "116px",
-                height: "116px",
-                borderRadius: "50%",
-                border: "2px solid #C4A4DE",
-                top: "-11px",
-                left: "-11px",
-              }}
-            />
-            <div
-              style={{
-                textAlign: "center",
-                lineHeight: 1.1,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: "var(--font-playfair), 'Playfair Display', serif",
-                  fontSize: "20px",
-                  fontStyle: "italic",
-                  fontWeight: 700,
-                  color: "#5B2D8E",
-                  display: "block",
-                }}
-              >
-                Purple
-              </span>
-              <span
-                style={{
-                  fontFamily: "var(--font-playfair), 'Playfair Display', serif",
-                  fontSize: "20px",
-                  fontStyle: "italic",
-                  fontWeight: 700,
-                  color: "#C4A84D",
-                  display: "block",
-                }}
-              >
-                Highs
-              </span>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
-  );
-});
-
-/* Simple decorative icon for the header */
-function PurpleRainIcon() {
-  return (
-    <svg
-      width="36"
-      height="36"
-      viewBox="0 0 36 36"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="18" cy="18" r="17" stroke="#5B2D8E" strokeWidth="2" />
-      <circle cx="18" cy="18" r="12" stroke="#C4A4DE" strokeWidth="1.5" />
-      <text
-        x="18"
-        y="22"
-        textAnchor="middle"
-        fill="#5B2D8E"
-        fontSize="14"
-        fontFamily="var(--font-playfair), Playfair Display, serif"
-        fontWeight="bold"
-        fontStyle="italic"
-      >
-        P
-      </text>
-    </svg>
   );
 }

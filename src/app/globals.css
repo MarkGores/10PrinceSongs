@@ -1,47 +1,212 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --purple-deep: #1a0a2e;
   --purple-primary: #5B2D8E;
   --purple-light: #7B4FAF;
+  --purple-muted: #C4A4DE;
   --purple-dark: #3D1A5E;
   --gold-accent: #C4A84D;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-purple-deep: var(--purple-deep);
   --color-purple-primary: var(--purple-primary);
   --color-purple-light: var(--purple-light);
+  --color-purple-muted: var(--purple-muted);
   --color-purple-dark: var(--purple-dark);
   --color-gold-accent: var(--gold-accent);
 }
 
+/* ---- Base ---- */
 body {
-  background: #f8f6fb;
-  color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  background: var(--purple-deep);
+  color: #ffffff;
+  font-family: "Inter", sans-serif;
+  overflow-x: hidden;
 }
 
-input::placeholder {
-  color: #b8a4cc;
-  font-style: italic;
+/* ---- Atmospheric background ---- */
+.bg-atmosphere {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(91, 45, 142, 0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 100%, rgba(91, 45, 142, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 80% 100%, rgba(123, 79, 175, 0.1) 0%, transparent 50%),
+    var(--purple-deep);
 }
 
-input:focus {
+/* ---- The graphic card ---- */
+.graphic-card {
+  background: #ffffff;
+  border-radius: 4px;
+  box-shadow:
+    0 0 80px rgba(91, 45, 142, 0.25),
+    0 0 160px rgba(91, 45, 142, 0.1),
+    0 20px 60px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.6s ease;
+}
+
+.graphic-card:focus-within {
+  box-shadow:
+    0 0 100px rgba(91, 45, 142, 0.35),
+    0 0 200px rgba(91, 45, 142, 0.15),
+    0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* ---- Inline song inputs (transparent, look like part of the graphic) ---- */
+.song-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #5B2D8E;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  width: 100%;
+  caret-color: #7B4FAF;
+  padding: 0;
+  margin: 0;
+}
+
+.song-input::placeholder {
+  color: #D8CCE5;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.song-input:focus {
   outline: none;
 }
 
-@keyframes pulse-purple {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(91, 45, 142, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 12px rgba(91, 45, 142, 0);
-  }
+/* Subtle highlight on the row being edited */
+.song-row {
+  transition: background 0.2s ease;
+  border-radius: 4px;
+  margin-left: -8px;
+  margin-right: -8px;
+  padding-left: 8px;
+  padding-right: 8px;
 }
 
-.pulse-purple {
-  animation: pulse-purple 2s infinite;
+.song-row:focus-within {
+  background: rgba(91, 45, 142, 0.04);
+}
+
+/* ---- Name input ---- */
+.name-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #5B2D8E;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  caret-color: #7B4FAF;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.name-input::placeholder {
+  color: #D8CCE5;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* ---- Download button ---- */
+.btn-download {
+  background: linear-gradient(135deg, #5B2D8E 0%, #7B4FAF 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.btn-download:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 30px rgba(91, 45, 142, 0.4),
+    0 0 60px rgba(91, 45, 142, 0.2);
+}
+
+.btn-download:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-download:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---- Success state ---- */
+.btn-success {
+  background: linear-gradient(135deg, #2d8e5b 0%, #4faf7b 100%);
+}
+
+/* ---- Glow pulse on download ---- */
+@keyframes glow-pulse {
+  0% { box-shadow: 0 0 80px rgba(91, 45, 142, 0.25), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
+  50% { box-shadow: 0 0 120px rgba(91, 45, 142, 0.5), 0 0 240px rgba(91, 45, 142, 0.25), 0 20px 60px rgba(0,0,0,0.3); }
+  100% { box-shadow: 0 0 80px rgba(91, 45, 142, 0.25), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
+}
+
+.glow-pulse {
+  animation: glow-pulse 0.8s ease-in-out;
+}
+
+/* ---- Fade-in animations ---- */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out forwards;
+}
+
+.animate-fade-up-delay {
+  opacity: 0;
+  animation: fade-up 0.8s ease-out 0.3s forwards;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 1s ease-out forwards;
+}
+
+/* ---- Staggered song rows ---- */
+.song-row {
+  opacity: 0;
+  animation: fade-up 0.4s ease-out forwards;
+}
+
+.song-row:nth-child(1) { animation-delay: 0.1s; }
+.song-row:nth-child(2) { animation-delay: 0.15s; }
+.song-row:nth-child(3) { animation-delay: 0.2s; }
+.song-row:nth-child(4) { animation-delay: 0.25s; }
+.song-row:nth-child(5) { animation-delay: 0.3s; }
+.song-row:nth-child(6) { animation-delay: 0.35s; }
+.song-row:nth-child(7) { animation-delay: 0.4s; }
+.song-row:nth-child(8) { animation-delay: 0.45s; }
+.song-row:nth-child(9) { animation-delay: 0.5s; }
+.song-row:nth-child(10) { animation-delay: 0.55s; }
+
+/* ---- Scrollbar styling ---- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(91, 45, 142, 0.3);
+  border-radius: 3px;
 }
