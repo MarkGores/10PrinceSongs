@@ -143,16 +143,22 @@ body {
   cursor: not-allowed;
 }
 
-/* ---- Success state ---- */
+/* ---- Success state (gold) ---- */
 .btn-success {
-  background: linear-gradient(135deg, #2d8e5b 0%, #4faf7b 100%);
+  background: linear-gradient(135deg, #B8972E 0%, #D4AF37 50%, #C4A84D 100%);
 }
 
-/* ---- Glow pulse on download ---- */
+.btn-success:hover:not(:disabled) {
+  box-shadow:
+    0 8px 30px rgba(196, 168, 77, 0.4),
+    0 0 60px rgba(196, 168, 77, 0.2);
+}
+
+/* ---- Glow pulse on share/download (gold accent) ---- */
 @keyframes glow-pulse {
-  0% { box-shadow: 0 0 80px rgba(91, 45, 142, 0.25), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
-  50% { box-shadow: 0 0 120px rgba(91, 45, 142, 0.5), 0 0 240px rgba(91, 45, 142, 0.25), 0 20px 60px rgba(0,0,0,0.3); }
-  100% { box-shadow: 0 0 80px rgba(91, 45, 142, 0.25), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
+  0% { box-shadow: 0 0 80px rgba(196, 168, 77, 0.2), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
+  50% { box-shadow: 0 0 120px rgba(196, 168, 77, 0.45), 0 0 240px rgba(91, 45, 142, 0.2), 0 20px 60px rgba(0,0,0,0.3); }
+  100% { box-shadow: 0 0 80px rgba(196, 168, 77, 0.2), 0 0 160px rgba(91, 45, 142, 0.1), 0 20px 60px rgba(0,0,0,0.3); }
 }
 
 .glow-pulse {

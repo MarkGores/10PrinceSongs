@@ -338,17 +338,19 @@ export default function Home() {
 
   return (
     <div className="bg-atmosphere min-h-screen min-h-dvh flex flex-col items-center">
-      {/* Top tagline */}
-      <div className="animate-fade-in pt-8 sm:pt-12 pb-2 text-center px-4">
-        <p className="text-purple-muted/70 text-sm tracking-[0.2em] uppercase">
-          10-Year Anniversary &middot; April 21, 2026
+      {/* Header */}
+      <div className="animate-fade-in pt-8 sm:pt-12 pb-1 text-center px-4">
+        <p className="text-sm tracking-[0.15em] uppercase">
+          <span className="text-purple-muted/60">Celebrating Prince</span>
+          <span className="mx-2 text-purple-muted/30">&middot;</span>
+          <span style={{ color: "#C4A84D" }}>April 21, 2026</span>
         </p>
       </div>
 
-      {/* Prompt */}
-      <div className="animate-fade-up-delay text-center px-6 pb-6 sm:pb-8 max-w-md">
-        <p className="text-purple-muted/90 text-base leading-relaxed">
-          Tap any line. Type your picks. Download &amp; share.
+      <div className="animate-fade-up-delay text-center px-6 pb-5 sm:pb-7 max-w-md">
+        <p className="text-purple-muted/80 text-lg leading-relaxed italic"
+           style={{ fontFamily: "var(--font-playfair), 'Playfair Display', serif" }}>
+          Everyone&apos;s got their 10. What are yours?
         </p>
       </div>
 
@@ -622,7 +624,8 @@ export default function Home() {
           <button
             onClick={handleDownload}
             disabled={isGenerating}
-            className="text-purple-muted/50 text-sm hover:text-purple-muted/80 transition-colors underline underline-offset-2 cursor-pointer bg-transparent border-none"
+            className="text-sm hover:opacity-80 transition-colors underline underline-offset-2 cursor-pointer bg-transparent border-none"
+            style={{ color: "rgba(196, 168, 77, 0.6)" }}
           >
             or download as PNG
           </button>
@@ -632,7 +635,8 @@ export default function Home() {
           <p className="text-purple-muted/80 text-sm text-center animate-fade-in">
             Post it with{" "}
             <span
-              className="text-purple-muted font-semibold cursor-pointer hover:text-white transition-colors"
+              className="font-semibold cursor-pointer hover:text-white transition-colors"
+              style={{ color: "#C4A84D" }}
               onClick={() => {
                 navigator.clipboard.writeText("#My10PrinceSongs");
               }}
