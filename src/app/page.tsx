@@ -712,7 +712,7 @@ export default function Home() {
         <p className="text-purple-muted/30 text-xs">
           Created by{" "}
           <a
-            href="https://instagram.com/djdudleyd"
+            href="https://facebook.com/djdudleyd"
             target="_blank"
             rel="noopener noreferrer"
             className="transition-colors"
