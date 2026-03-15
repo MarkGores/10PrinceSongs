@@ -18,7 +18,8 @@ const PLACEHOLDER_SONGS = [
 
 export default function Home() {
   const [songs, setSongs] = useState<string[]>(Array(10).fill(""));
-  const [userName, setUserName] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [handle, setHandle] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [glowing, setGlowing] = useState(false);
@@ -219,13 +220,27 @@ export default function Home() {
       ctx.fillText(songText || PLACEHOLDER_SONGS[i], PAD + 76, y);
     }
 
-    // --- User name (bottom left) ---
-    if (userName.trim()) {
-      ctx.textAlign = "left";
-      ctx.textBaseline = "bottom";
-      ctx.fillStyle = "#5B2D8E";
+    // --- User info (bottom left) ---
+    ctx.textAlign = "left";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "#5B2D8E";
+
+    const hasName = displayName.trim();
+    const hasHandle = handle.trim();
+
+    if (hasName && hasHandle) {
+      // Both: name on first line, handle below
       ctx.font = '500 26px "Inter", sans-serif';
-      ctx.fillText(userName, PAD, S - PAD + 20);
+      ctx.fillText(displayName.trim(), PAD, S - PAD + 4);
+      ctx.font = '400 22px "Inter", sans-serif';
+      ctx.fillStyle = "#7B4FAF";
+      ctx.fillText(handle.trim().startsWith("@") ? handle.trim() : `@${handle.trim()}`, PAD, S - PAD + 32);
+    } else if (hasName) {
+      ctx.font = '500 26px "Inter", sans-serif';
+      ctx.fillText(displayName.trim(), PAD, S - PAD + 20);
+    } else if (hasHandle) {
+      ctx.font = '500 26px "Inter", sans-serif';
+      ctx.fillText(handle.trim().startsWith("@") ? handle.trim() : `@${handle.trim()}`, PAD, S - PAD + 20);
     }
 
     // --- Purple Highs logo (bottom right) ---
@@ -253,7 +268,7 @@ export default function Home() {
       };
       logoImg.src = "/purplehighs.jpeg";
     });
-  }, [songs, userName]);
+  }, [songs, displayName, handle]);
 
   // Check if native share (with files) is supported
   const canShare = typeof navigator !== "undefined" &&
@@ -551,7 +566,7 @@ export default function Home() {
                 ))}
               </div>
 
-              {/* Bottom row: name + logo */}
+              {/* Bottom row: name/handle + logo */}
               <div
                 style={{
                   display: "flex",
@@ -560,24 +575,46 @@ export default function Home() {
                   marginTop: 24,
                 }}
               >
-                <div style={{ flex: 1, maxWidth: 400 }}>
+                <div style={{ flex: 1, maxWidth: 500, display: "flex", flexDirection: "column", gap: 6 }}>
                   <input
                     type="text"
-                    value={userName}
+                    value={displayName}
                     onChange={(e) => {
-                      setUserName(e.target.value);
+                      setDisplayName(e.target.value);
                       setGenerated(false);
                     }}
-                    placeholder="your name or @handle"
+                    placeholder="Your Name"
                     className="name-input"
-                    style={{ fontSize: 26 }}
-                    maxLength={40}
+                    style={{
+                      fontSize: 26,
+                      borderBottom: "1.5px solid rgba(91, 45, 142, 0.12)",
+                      paddingBottom: 6,
+                    }}
+                    maxLength={30}
+                    autoComplete="off"
+                  />
+                  <input
+                    type="text"
+                    value={handle}
+                    onChange={(e) => {
+                      setHandle(e.target.value);
+                      setGenerated(false);
+                    }}
+                    placeholder="@handle"
+                    className="name-input"
+                    style={{
+                      fontSize: 22,
+                      borderBottom: "1.5px solid rgba(91, 45, 142, 0.12)",
+                      paddingBottom: 6,
+                      color: "#7B4FAF",
+                    }}
+                    maxLength={30}
                     autoComplete="off"
                   />
                 </div>
 
                 {/* Purple Highs Logo */}
-                <div style={{ flexShrink: 0 }}>
+                <div style={{ flexShrink: 0, marginLeft: 20 }}>
                   <img
                     src="/purplehighs.jpeg"
                     alt="Purple Highs"
