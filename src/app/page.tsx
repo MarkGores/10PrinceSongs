@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import PRINCE_SONGS from "@/data/princeSongs";
 
 const PLACEHOLDER_SONGS = [
   "Purple Rain",
@@ -21,9 +22,12 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [glowing, setGlowing] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
   const cardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
   const [cardScale, setCardScale] = useState(1);
 
   const filledCount = songs.filter((s) => s.trim()).length;
@@ -33,7 +37,6 @@ export default function Home() {
     const updateScale = () => {
       if (containerRef.current) {
         const vw = containerRef.current.offsetWidth;
-        // On mobile, use nearly full width; on desktop, cap at a nice size
         const maxCardDisplay = Math.min(vw - 32, 580);
         setCardScale(maxCardDisplay / 1080);
       }
@@ -42,6 +45,43 @@ export default function Home() {
     window.addEventListener("resize", updateScale);
     return () => window.removeEventListener("resize", updateScale);
   }, []);
+
+  // Autocomplete suggestions
+  const suggestions = useMemo(() => {
+    if (focusedIndex === null) return [];
+    const query = songs[focusedIndex]?.trim().toLowerCase();
+    if (!query || query.length < 1) return [];
+
+    // Filter out songs already chosen in other slots
+    const alreadyChosen = new Set(
+      songs
+        .filter((s, i) => i !== focusedIndex && s.trim())
+        .map((s) => s.trim().toLowerCase())
+    );
+
+    const matches = PRINCE_SONGS.filter((s) => {
+      const lower = s.toLowerCase();
+      if (alreadyChosen.has(lower)) return false;
+      // Exact match means no need for suggestions
+      if (lower === query) return false;
+      return lower.includes(query);
+    });
+
+    // Sort: starts-with matches first, then contains
+    matches.sort((a, b) => {
+      const aStarts = a.toLowerCase().startsWith(query) ? 0 : 1;
+      const bStarts = b.toLowerCase().startsWith(query) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      return a.localeCompare(b);
+    });
+
+    return matches.slice(0, 4);
+  }, [focusedIndex, songs]);
+
+  // Reset highlighted suggestion when suggestions change
+  useEffect(() => {
+    setHighlightedSuggestion(-1);
+  }, [suggestions]);
 
   const handleSongChange = useCallback(
     (index: number, value: string) => {
@@ -53,8 +93,61 @@ export default function Home() {
     [songs]
   );
 
+  const selectSuggestion = useCallback(
+    (index: number, songTitle: string) => {
+      const newSongs = [...songs];
+      newSongs[index] = songTitle;
+      setSongs(newSongs);
+      setGenerated(false);
+      // Advance to next input
+      if (index < 9) {
+        setTimeout(() => inputRefs.current[index + 1]?.focus(), 0);
+      } else {
+        inputRefs.current[index]?.blur();
+      }
+    },
+    [songs]
+  );
+
   const handleKeyDown = useCallback(
     (index: number, e: React.KeyboardEvent) => {
+      // If suggestions are open, handle arrow keys and enter
+      if (suggestions.length > 0) {
+        if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setHighlightedSuggestion((prev) =>
+            prev < suggestions.length - 1 ? prev + 1 : 0
+          );
+          return;
+        }
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setHighlightedSuggestion((prev) =>
+            prev > 0 ? prev - 1 : suggestions.length - 1
+          );
+          return;
+        }
+        if (e.key === "Enter" && highlightedSuggestion >= 0) {
+          e.preventDefault();
+          selectSuggestion(index, suggestions[highlightedSuggestion]);
+          return;
+        }
+        if (e.key === "Tab" && suggestions.length > 0) {
+          // Tab accepts the first/highlighted suggestion
+          e.preventDefault();
+          const pick =
+            highlightedSuggestion >= 0
+              ? suggestions[highlightedSuggestion]
+              : suggestions[0];
+          selectSuggestion(index, pick);
+          return;
+        }
+        if (e.key === "Escape") {
+          setFocusedIndex(null);
+          return;
+        }
+      }
+
       if (e.key === "Enter" && index < 9) {
         e.preventDefault();
         inputRefs.current[index + 1]?.focus();
@@ -64,7 +157,7 @@ export default function Home() {
         inputRefs.current[index - 1]?.focus();
       }
     },
-    [songs]
+    [songs, suggestions, highlightedSuggestion, selectSuggestion]
   );
 
   const handleDownload = async () => {
@@ -140,28 +233,24 @@ export default function Home() {
       const innerR = 50;
       const outerR = 58;
 
-      // Outer decorative ring
       ctx.beginPath();
       ctx.arc(logoX, logoY, outerR, 0, Math.PI * 2);
       ctx.strokeStyle = "#C4A4DE";
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      // Inner ring
       ctx.beginPath();
       ctx.arc(logoX, logoY, innerR, 0, Math.PI * 2);
       ctx.strokeStyle = "#5B2D8E";
       ctx.lineWidth = 3;
       ctx.stroke();
 
-      // "Purple" text
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillStyle = "#5B2D8E";
       ctx.font = 'italic 700 20px "Playfair Display", serif';
       ctx.fillText("Purple", logoX, logoY - 10);
 
-      // "Highs" text
       ctx.fillStyle = "#C4A84D";
       ctx.font = 'italic 700 20px "Playfair Display", serif';
       ctx.fillText("Highs", logoX, logoY + 14);
@@ -227,7 +316,6 @@ export default function Home() {
               transformOrigin: "top left",
             }}
           >
-            {/* Inner content of the graphic */}
             <div
               style={{
                 width: "100%",
@@ -239,10 +327,11 @@ export default function Home() {
               }}
             >
               {/* Title */}
-              <div style={{ textAlign: "center", marginBottom: "8px" }}>
+              <div style={{ textAlign: "center", marginBottom: 8 }}>
                 <h1
                   style={{
-                    fontFamily: "var(--font-playfair), 'Playfair Display', serif",
+                    fontFamily:
+                      "var(--font-playfair), 'Playfair Display', serif",
                     fontSize: 72,
                     fontWeight: 900,
                     fontStyle: "italic",
@@ -266,7 +355,7 @@ export default function Home() {
                 }}
               />
 
-              {/* Song list — each row is an input */}
+              {/* Song list — each row is an input with autocomplete */}
               <div
                 style={{
                   flex: 1,
@@ -286,6 +375,7 @@ export default function Home() {
                       alignItems: "center",
                       gap: 14,
                       height: 68,
+                      position: "relative",
                     }}
                   >
                     <span
@@ -302,22 +392,90 @@ export default function Home() {
                     >
                       {i + 1}.
                     </span>
-                    <input
-                      ref={(el) => {
-                        inputRefs.current[i] = el;
-                      }}
-                      type="text"
-                      value={song}
-                      onChange={(e) => handleSongChange(i, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(i, e)}
-                      placeholder={PLACEHOLDER_SONGS[i]}
-                      className="song-input"
-                      style={{ fontSize: 32 }}
-                      maxLength={50}
-                      autoComplete="off"
-                      autoCorrect="off"
-                      spellCheck={false}
-                    />
+                    <div style={{ flex: 1, position: "relative" }}>
+                      <input
+                        ref={(el) => {
+                          inputRefs.current[i] = el;
+                        }}
+                        type="text"
+                        value={song}
+                        onChange={(e) => handleSongChange(i, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(i, e)}
+                        onFocus={() => setFocusedIndex(i)}
+                        onBlur={() => {
+                          // Delay to allow suggestion click to register
+                          setTimeout(() => setFocusedIndex(null), 150);
+                        }}
+                        placeholder={PLACEHOLDER_SONGS[i]}
+                        className="song-input"
+                        style={{ fontSize: 32 }}
+                        maxLength={50}
+                        autoComplete="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                      />
+
+                      {/* Autocomplete dropdown */}
+                      {focusedIndex === i && suggestions.length > 0 && (
+                        <div
+                          ref={suggestionsRef}
+                          className="suggestions-dropdown"
+                          style={{
+                            position: "absolute",
+                            top: "100%",
+                            left: -8,
+                            right: -8,
+                            zIndex: 50,
+                            marginTop: 4,
+                            background: "#ffffff",
+                            borderRadius: 8,
+                            boxShadow:
+                              "0 8px 30px rgba(91, 45, 142, 0.15), 0 2px 8px rgba(0,0,0,0.08)",
+                            border: "1px solid rgba(91, 45, 142, 0.12)",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {suggestions.map((s, si) => (
+                            <button
+                              key={s}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent blur
+                                selectSuggestion(i, s);
+                              }}
+                              onMouseEnter={() =>
+                                setHighlightedSuggestion(si)
+                              }
+                              style={{
+                                display: "block",
+                                width: "100%",
+                                textAlign: "left",
+                                padding: "12px 16px",
+                                fontSize: 26,
+                                fontFamily:
+                                  "var(--font-inter), 'Inter', sans-serif",
+                                color: "#5B2D8E",
+                                background:
+                                  si === highlightedSuggestion
+                                    ? "rgba(91, 45, 142, 0.06)"
+                                    : "transparent",
+                                border: "none",
+                                cursor: "pointer",
+                                borderBottom:
+                                  si < suggestions.length - 1
+                                    ? "1px solid rgba(91, 45, 142, 0.06)"
+                                    : "none",
+                                transition: "background 0.1s ease",
+                              }}
+                            >
+                              <SuggestionText
+                                text={s}
+                                query={songs[i]?.trim() || ""}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -331,7 +489,6 @@ export default function Home() {
                   marginTop: 24,
                 }}
               >
-                {/* User name input */}
                 <div style={{ flex: 1, maxWidth: 400 }}>
                   <input
                     type="text"
@@ -416,7 +573,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Download area — below the card */}
+      {/* Download area */}
       <div className="w-full max-w-md px-6 pt-6 sm:pt-8 pb-4 animate-fade-up-delay flex flex-col items-center gap-3">
         <button
           onClick={handleDownload}
@@ -473,5 +630,22 @@ export default function Home() {
         </p>
       </div>
     </div>
+  );
+}
+
+/* Highlights the matching portion of a suggestion */
+function SuggestionText({ text, query }: { text: string; query: string }) {
+  if (!query) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+
+  return (
+    <>
+      {text.slice(0, idx)}
+      <span style={{ fontWeight: 600 }}>
+        {text.slice(idx, idx + query.length)}
+      </span>
+      {text.slice(idx + query.length)}
+    </>
   );
 }

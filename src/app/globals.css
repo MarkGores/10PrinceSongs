@@ -86,10 +86,13 @@ body {
   margin-right: -8px;
   padding-left: 8px;
   padding-right: 8px;
+  position: relative;
+  z-index: 1;
 }
 
 .song-row:focus-within {
   background: rgba(91, 45, 142, 0.04);
+  z-index: 10;
 }
 
 /* ---- Name input ---- */
