@@ -28,6 +28,7 @@ export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const suggestionsRef = useRef<HTMLDivElement>(null);
+  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [cardScale, setCardScale] = useState(1);
 
   const filledCount = songs.filter((s) => s.trim()).length;
@@ -401,10 +402,22 @@ export default function Home() {
                         value={song}
                         onChange={(e) => handleSongChange(i, e.target.value)}
                         onKeyDown={(e) => handleKeyDown(i, e)}
-                        onFocus={() => setFocusedIndex(i)}
+                        onFocus={() => {
+                          // Cancel any pending blur timeout from a previous input
+                          if (blurTimeoutRef.current) {
+                            clearTimeout(blurTimeoutRef.current);
+                            blurTimeoutRef.current = null;
+                          }
+                          setFocusedIndex(i);
+                        }}
                         onBlur={() => {
-                          // Delay to allow suggestion click to register
-                          setTimeout(() => setFocusedIndex(null), 150);
+                          // Delay to allow suggestion click to register,
+                          // but store the timeout so it can be cancelled if
+                          // focus moves to another song input
+                          blurTimeoutRef.current = setTimeout(() => {
+                            setFocusedIndex(null);
+                            blurTimeoutRef.current = null;
+                          }, 150);
                         }}
                         placeholder={PLACEHOLDER_SONGS[i]}
                         className="song-input"
