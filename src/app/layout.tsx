@@ -18,18 +18,19 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "#My10PrinceSongs - Share Your Top 10 Prince Songs",
   description:
-    "Create and share your Top 10 Prince songs for the 10-year anniversary of Prince's passing. Generate a beautiful shareable graphic instantly.",
+    "What are your Top 10 Prince songs? Create and share a beautiful graphic for the 10-year anniversary. April 21, 2026.",
   openGraph: {
     title: "#My10PrinceSongs",
     description:
-      "What are your Top 10 Prince songs? Create a shareable graphic and celebrate the legacy of Prince.",
+      "Everyone's got their 10. What are yours? Create a shareable graphic and celebrate the legacy of Prince.",
     type: "website",
+    siteName: "My 10 Prince Songs",
   },
   twitter: {
     card: "summary_large_image",
     title: "#My10PrinceSongs",
     description:
-      "What are your Top 10 Prince songs? Create a shareable graphic and celebrate the legacy of Prince.",
+      "Everyone's got their 10. What are yours? Create a shareable graphic and celebrate the legacy of Prince.",
   },
 };
 
