@@ -22,6 +22,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const graphicRef = useRef<HTMLDivElement>(null);
+  const captureRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [previewScale, setPreviewScale] = useState(0.5);
@@ -69,27 +70,36 @@ export default function Home() {
   );
 
   const handleDownload = async () => {
-    if (!graphicRef.current) return;
+    if (!captureRef.current) return;
     setIsGenerating(true);
 
     try {
       // Wait for fonts to load
       await document.fonts.ready;
 
-      const canvas = await html2canvas(graphicRef.current, {
-        scale: 2,
+      // Make the offscreen capture element visible (but still offscreen) for html2canvas
+      const el = captureRef.current;
+      el.style.display = "block";
+
+      // Give the browser a frame to lay it out
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+      const canvas = await html2canvas(el, {
+        scale: 1,
         useCORS: true,
         backgroundColor: "#ffffff",
         width: 1080,
         height: 1080,
-        windowWidth: 1080,
-        windowHeight: 1080,
       });
+
+      el.style.display = "none";
 
       const link = document.createElement("a");
       link.download = "My10PrinceSongs.png";
       link.href = canvas.toDataURL("image/png", 1.0);
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
       setGenerated(true);
     } catch {
       alert("Something went wrong generating your image. Please try again.");
@@ -288,6 +298,23 @@ export default function Home() {
           &middot; Purple Highs
         </p>
       </footer>
+
+      {/* Offscreen full-size capture element — hidden, used only for PNG generation */}
+      <div
+        style={{
+          position: "fixed",
+          left: "-9999px",
+          top: 0,
+          display: "none",
+          zIndex: -1,
+        }}
+      >
+        <GraphicTemplate
+          songs={songs}
+          userName={userName}
+          ref={captureRef}
+        />
+      </div>
     </div>
   );
 }
