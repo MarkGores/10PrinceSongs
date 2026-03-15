@@ -24,6 +24,7 @@ export default function Home() {
   const [generated, setGenerated] = useState(false);
   const [glowing, setGlowing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [hashtagCopied, setHashtagCopied] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -285,6 +286,12 @@ export default function Home() {
         // Mobile: use native share sheet
         const file = new File([blob], "My10PrinceSongs.png", { type: "image/png" });
         if (navigator.canShare({ files: [file] })) {
+          // Copy hashtag to clipboard so user can paste it into their caption
+          try {
+            await navigator.clipboard.writeText("#My10PrinceSongs");
+          } catch {
+            // Silently fail — clipboard access may be restricted
+          }
           await navigator.share({
             files: [file],
             title: "#My10PrinceSongs",
@@ -293,6 +300,8 @@ export default function Home() {
           setGlowing(true);
           setTimeout(() => setGlowing(false), 800);
           setGenerated(true);
+          setHashtagCopied(true);
+          setTimeout(() => setHashtagCopied(false), 4000);
           setIsGenerating(false);
           return;
         }
@@ -662,7 +671,7 @@ export default function Home() {
             onClick={handleDownload}
             disabled={isGenerating}
             className="text-sm hover:opacity-80 transition-colors underline underline-offset-2 cursor-pointer bg-transparent border-none"
-            style={{ color: "rgba(196, 168, 77, 0.6)" }}
+            style={{ color: "rgba(196, 168, 77, 0.7)" }}
           >
             or download as PNG
           </button>
@@ -670,13 +679,24 @@ export default function Home() {
 
         {generated && (
           <p className="text-purple-muted/60 text-sm text-center animate-fade-in">
-            Post it with{" "}
-            <span
-              className="font-semibold"
-              style={{ color: "#C4A84D" }}
-            >
-              #My10PrinceSongs
-            </span>
+            {hashtagCopied ? (
+              <>
+                <span style={{ color: "#C4A84D" }}>
+                  #My10PrinceSongs
+                </span>{" "}
+                copied — paste it in your caption!
+              </>
+            ) : (
+              <>
+                Post it with{" "}
+                <span
+                  className="font-semibold"
+                  style={{ color: "#C4A84D" }}
+                >
+                  #My10PrinceSongs
+                </span>
+              </>
+            )}
           </p>
         )}
 
@@ -695,7 +715,8 @@ export default function Home() {
             href="https://instagram.com/djdudleyd"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-purple-muted/60 transition-colors"
+            className="transition-colors"
+            style={{ color: "rgba(196, 168, 77, 0.5)" }}
           >
             @djdudleyd
           </a>{" "}
