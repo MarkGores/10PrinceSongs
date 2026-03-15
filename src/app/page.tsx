@@ -301,7 +301,12 @@ export default function Home() {
         // Clipboard API not supported — fall back to download
         downloadBlob(blob);
       }
-    } catch {
+    } catch (err) {
+      // User cancelled the share sheet — not an error
+      if (err instanceof Error && err.name === "AbortError") {
+        setIsGenerating(false);
+        return;
+      }
       alert("Something went wrong. Please try again.");
       setIsGenerating(false);
     }
