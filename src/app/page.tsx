@@ -173,6 +173,9 @@ export default function Home() {
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("Canvas not supported");
 
+    // --- Safe zone padding (Instagram crops ~20px on edges) ---
+    const PAD = 120; // generous inner margin
+
     // --- White background ---
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, S, S);
@@ -182,21 +185,21 @@ export default function Home() {
     ctx.textBaseline = "alphabetic";
     ctx.fillStyle = "#5B2D8E";
     ctx.font = 'italic 900 72px "Playfair Display", serif';
-    ctx.fillText("#My10PrinceSongs", S / 2, 108);
+    ctx.fillText("#My10PrinceSongs", S / 2, PAD + 8);
 
     // --- Divider line (gradient) ---
-    const grad = ctx.createLinearGradient(80, 0, S - 80, 0);
+    const grad = ctx.createLinearGradient(PAD, 0, S - PAD, 0);
     grad.addColorStop(0, "rgba(196, 164, 222, 0)");
     grad.addColorStop(0.2, "#C4A4DE");
     grad.addColorStop(0.5, "#7B4FAF");
     grad.addColorStop(0.8, "#C4A4DE");
     grad.addColorStop(1, "rgba(196, 164, 222, 0)");
     ctx.fillStyle = grad;
-    ctx.fillRect(80, 134, S - 160, 2);
+    ctx.fillRect(PAD, PAD + 34, S - PAD * 2, 2);
 
     // --- Song list ---
-    const listTop = 190;
-    const listBottom = S - 150;
+    const listTop = PAD + 60;
+    const listBottom = S - PAD - 60;
     const rowHeight = (listBottom - listTop) / 10;
 
     ctx.textBaseline = "middle";
@@ -208,12 +211,12 @@ export default function Home() {
       ctx.textAlign = "right";
       ctx.fillStyle = "#5B2D8E";
       ctx.font = '400 28px "Inter", sans-serif';
-      ctx.fillText(`${i + 1}.`, 152, y);
+      ctx.fillText(`${i + 1}.`, PAD + 52, y);
 
       ctx.textAlign = "left";
       ctx.fillStyle = songText ? "#5B2D8E" : "#D8CCE5";
       ctx.font = '400 32px "Inter", sans-serif';
-      ctx.fillText(songText || PLACEHOLDER_SONGS[i], 176, y);
+      ctx.fillText(songText || PLACEHOLDER_SONGS[i], PAD + 76, y);
     }
 
     // --- User name (bottom left) ---
@@ -222,12 +225,12 @@ export default function Home() {
       ctx.textBaseline = "bottom";
       ctx.fillStyle = "#5B2D8E";
       ctx.font = '500 26px "Inter", sans-serif';
-      ctx.fillText(userName, 80, S - 52);
+      ctx.fillText(userName, PAD, S - PAD + 20);
     }
 
     // --- Purple Highs logo (bottom right) ---
-    const logoX = S - 138;
-    const logoY = S - 110;
+    const logoX = S - PAD - 18;
+    const logoY = S - PAD - 30;
 
     ctx.beginPath();
     ctx.arc(logoX, logoY, 58, 0, Math.PI * 2);
@@ -382,7 +385,7 @@ export default function Home() {
                 height: "100%",
                 display: "flex",
                 flexDirection: "column",
-                padding: "72px 80px 52px",
+                padding: "92px 120px 72px",
                 boxSizing: "border-box",
               }}
             >
