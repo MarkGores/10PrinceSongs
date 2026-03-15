@@ -286,12 +286,6 @@ export default function Home() {
         // Mobile: use native share sheet
         const file = new File([blob], "My10PrinceSongs.png", { type: "image/png" });
         if (navigator.canShare({ files: [file] })) {
-          // Copy hashtag to clipboard so user can paste it into their caption
-          try {
-            await navigator.clipboard.writeText("#My10PrinceSongs");
-          } catch {
-            // Silently fail — clipboard access may be restricted
-          }
           await navigator.share({
             files: [file],
             title: "#My10PrinceSongs",
@@ -300,8 +294,6 @@ export default function Home() {
           setGlowing(true);
           setTimeout(() => setGlowing(false), 800);
           setGenerated(true);
-          setHashtagCopied(true);
-          setTimeout(() => setHashtagCopied(false), 4000);
           setIsGenerating(false);
           return;
         }
@@ -678,26 +670,31 @@ export default function Home() {
         )}
 
         {generated && (
-          <p className="text-purple-muted/60 text-sm text-center animate-fade-in">
-            {hashtagCopied ? (
-              <>
-                <span style={{ color: "#C4A84D" }}>
-                  #My10PrinceSongs
-                </span>{" "}
-                copied — paste it in your caption!
-              </>
-            ) : (
-              <>
-                Post it with{" "}
-                <span
-                  className="font-semibold"
-                  style={{ color: "#C4A84D" }}
-                >
-                  #My10PrinceSongs
-                </span>
-              </>
-            )}
-          </p>
+          <div className="text-center animate-fade-in space-y-2">
+            <p className="text-purple-muted/60 text-sm">
+              Don&apos;t forget to add the hashtag to your caption:
+            </p>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText("#My10PrinceSongs");
+                  setHashtagCopied(true);
+                  setTimeout(() => setHashtagCopied(false), 2500);
+                } catch {
+                  // If clipboard fails, at least they can see and manually type it
+                }
+              }}
+              className="inline-block px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer border-none"
+              style={{
+                background: hashtagCopied
+                  ? "linear-gradient(135deg, #B8972E, #D4AF37)"
+                  : "rgba(196, 168, 77, 0.15)",
+                color: hashtagCopied ? "#1a0a2e" : "#C4A84D",
+              }}
+            >
+              {hashtagCopied ? "Copied!" : "#My10PrinceSongs  ·  Tap to copy"}
+            </button>
+          </div>
         )}
 
         {!generated && filledCount > 0 && filledCount < 10 && (
