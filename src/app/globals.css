@@ -3,24 +3,45 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --purple-primary: #5B2D8E;
+  --purple-light: #7B4FAF;
+  --purple-dark: #3D1A5E;
+  --gold-accent: #C4A84D;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-purple-primary: var(--purple-primary);
+  --color-purple-light: var(--purple-light);
+  --color-purple-dark: var(--purple-dark);
+  --color-gold-accent: var(--gold-accent);
 }
 
 body {
-  background: var(--background);
+  background: #f8f6fb;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+}
+
+input::placeholder {
+  color: #b8a4cc;
+  font-style: italic;
+}
+
+input:focus {
+  outline: none;
+}
+
+@keyframes pulse-purple {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(91, 45, 142, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(91, 45, 142, 0);
+  }
+}
+
+.pulse-purple {
+  animation: pulse-purple 2s infinite;
 }
