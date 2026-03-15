@@ -669,8 +669,8 @@ export default function Home() {
           </button>
         )}
 
-        {generated && (
-          <div className="text-center animate-fade-in space-y-2">
+        {filledCount > 0 && (
+          <div className="text-center space-y-2">
             <p className="text-purple-muted/60 text-sm">
               Don&apos;t forget to add the hashtag to your caption:
             </p>
@@ -695,12 +695,6 @@ export default function Home() {
               {hashtagCopied ? "Copied!" : "#My10PrinceSongs  ·  Tap to copy"}
             </button>
           </div>
-        )}
-
-        {!generated && filledCount > 0 && filledCount < 10 && (
-          <p className="text-purple-muted/50 text-xs text-center">
-            {filledCount}/10 &mdash; you can share anytime
-          </p>
         )}
       </div>
 
