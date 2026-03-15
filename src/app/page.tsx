@@ -229,35 +229,29 @@ export default function Home() {
     }
 
     // --- Purple Highs logo (bottom right) ---
-    const logoX = S - PAD - 18;
-    const logoY = S - PAD - 30;
+    const logoImg = new Image();
+    logoImg.crossOrigin = "anonymous";
 
-    ctx.beginPath();
-    ctx.arc(logoX, logoY, 58, 0, Math.PI * 2);
-    ctx.strokeStyle = "#C4A4DE";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    return new Promise<Blob>((resolve, reject) => {
+      logoImg.onload = () => {
+        const logoSize = 140;
+        const logoX = S - PAD - logoSize + 20;
+        const logoY = S - PAD - logoSize + 20;
+        ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
 
-    ctx.beginPath();
-    ctx.arc(logoX, logoY, 50, 0, Math.PI * 2);
-    ctx.strokeStyle = "#5B2D8E";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#5B2D8E";
-    ctx.font = 'italic 700 20px "Playfair Display", serif';
-    ctx.fillText("Purple", logoX, logoY - 10);
-    ctx.fillStyle = "#C4A84D";
-    ctx.font = 'italic 700 20px "Playfair Display", serif';
-    ctx.fillText("Highs", logoX, logoY + 14);
-
-    return new Promise((resolve, reject) => {
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error("Failed to generate image"));
-      }, "image/png");
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to generate image"));
+        }, "image/png");
+      };
+      logoImg.onerror = () => {
+        // If logo fails to load, still generate without it
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error("Failed to generate image"));
+        }, "image/png");
+      };
+      logoImg.src = "/purplehighs.jpeg";
     });
   }, [songs, userName]);
 
@@ -581,66 +575,16 @@ export default function Home() {
                 </div>
 
                 {/* Purple Highs Logo */}
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <div
+                <div style={{ flexShrink: 0 }}>
+                  <img
+                    src="/purplehighs.jpeg"
+                    alt="Purple Highs"
                     style={{
-                      width: 100,
-                      height: 100,
-                      borderRadius: "50%",
-                      border: "3px solid #5B2D8E",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      position: "relative",
+                      width: 120,
+                      height: 120,
+                      objectFit: "contain",
                     }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        width: 116,
-                        height: 116,
-                        borderRadius: "50%",
-                        border: "2px solid #C4A4DE",
-                        top: -11,
-                        left: -11,
-                      }}
-                    />
-                    <div style={{ textAlign: "center", lineHeight: 1.1 }}>
-                      <span
-                        style={{
-                          fontFamily:
-                            "var(--font-playfair), 'Playfair Display', serif",
-                          fontSize: 20,
-                          fontStyle: "italic",
-                          fontWeight: 700,
-                          color: "#5B2D8E",
-                          display: "block",
-                        }}
-                      >
-                        Purple
-                      </span>
-                      <span
-                        style={{
-                          fontFamily:
-                            "var(--font-playfair), 'Playfair Display', serif",
-                          fontSize: 20,
-                          fontStyle: "italic",
-                          fontWeight: 700,
-                          color: "#C4A84D",
-                          display: "block",
-                        }}
-                      >
-                        Highs
-                      </span>
-                    </div>
-                  </div>
+                  />
                 </div>
               </div>
             </div>
