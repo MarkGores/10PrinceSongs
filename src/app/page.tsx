@@ -632,19 +632,14 @@ export default function Home() {
         )}
 
         {generated && (
-          <p className="text-purple-muted/80 text-sm text-center animate-fade-in">
+          <p className="text-purple-muted/60 text-sm text-center animate-fade-in">
             Post it with{" "}
             <span
-              className="font-semibold cursor-pointer hover:text-white transition-colors"
+              className="font-semibold"
               style={{ color: "#C4A84D" }}
-              onClick={() => {
-                navigator.clipboard.writeText("#My10PrinceSongs");
-              }}
-              title="Click to copy"
             >
               #My10PrinceSongs
-            </span>{" "}
-            <span className="text-purple-muted/50">(tap to copy)</span>
+            </span>
           </p>
         )}
 
