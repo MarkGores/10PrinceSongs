@@ -22,6 +22,7 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [glowing, setGlowing] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [highlightedSuggestion, setHighlightedSuggestion] = useState(-1);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -161,123 +162,176 @@ export default function Home() {
     [songs, suggestions, highlightedSuggestion, selectSuggestion]
   );
 
-  const handleDownload = async () => {
-    setIsGenerating(true);
+  // Generate the image blob from current state
+  const generateImage = useCallback(async (): Promise<Blob> => {
+    await document.fonts.ready;
 
-    try {
-      await document.fonts.ready;
+    const S = 1080;
+    const canvas = document.createElement("canvas");
+    canvas.width = S;
+    canvas.height = S;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("Canvas not supported");
 
-      const S = 1080;
-      const canvas = document.createElement("canvas");
-      canvas.width = S;
-      canvas.height = S;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas not supported");
+    // --- White background ---
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, S, S);
 
-      // --- White background ---
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, S, S);
+    // --- Title ---
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.fillStyle = "#5B2D8E";
+    ctx.font = 'italic 900 72px "Playfair Display", serif';
+    ctx.fillText("#My10PrinceSongs", S / 2, 108);
 
-      // --- Title ---
-      ctx.textAlign = "center";
-      ctx.textBaseline = "alphabetic";
+    // --- Divider line (gradient) ---
+    const grad = ctx.createLinearGradient(80, 0, S - 80, 0);
+    grad.addColorStop(0, "rgba(196, 164, 222, 0)");
+    grad.addColorStop(0.2, "#C4A4DE");
+    grad.addColorStop(0.5, "#7B4FAF");
+    grad.addColorStop(0.8, "#C4A4DE");
+    grad.addColorStop(1, "rgba(196, 164, 222, 0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(80, 134, S - 160, 2);
+
+    // --- Song list ---
+    const listTop = 190;
+    const listBottom = S - 150;
+    const rowHeight = (listBottom - listTop) / 10;
+
+    ctx.textBaseline = "middle";
+
+    for (let i = 0; i < 10; i++) {
+      const y = listTop + rowHeight * i + rowHeight / 2;
+      const songText = songs[i]?.trim() || "";
+
+      ctx.textAlign = "right";
       ctx.fillStyle = "#5B2D8E";
-      ctx.font = 'italic 900 72px "Playfair Display", serif';
-      ctx.fillText("#My10PrinceSongs", S / 2, 108);
+      ctx.font = '400 28px "Inter", sans-serif';
+      ctx.fillText(`${i + 1}.`, 152, y);
 
-      // --- Divider line (gradient) ---
-      const grad = ctx.createLinearGradient(80, 0, S - 80, 0);
-      grad.addColorStop(0, "rgba(196, 164, 222, 0)");
-      grad.addColorStop(0.2, "#C4A4DE");
-      grad.addColorStop(0.5, "#7B4FAF");
-      grad.addColorStop(0.8, "#C4A4DE");
-      grad.addColorStop(1, "rgba(196, 164, 222, 0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(80, 134, S - 160, 2);
+      ctx.textAlign = "left";
+      ctx.fillStyle = songText ? "#5B2D8E" : "#D8CCE5";
+      ctx.font = '400 32px "Inter", sans-serif';
+      ctx.fillText(songText || PLACEHOLDER_SONGS[i], 176, y);
+    }
 
-      // --- Song list ---
-      const listTop = 190;
-      const listBottom = S - 150;
-      const rowHeight = (listBottom - listTop) / 10;
-
-      ctx.textBaseline = "middle";
-
-      for (let i = 0; i < 10; i++) {
-        const y = listTop + rowHeight * i + rowHeight / 2;
-        const songText = songs[i]?.trim() || "";
-
-        // Number
-        ctx.textAlign = "right";
-        ctx.fillStyle = "#5B2D8E";
-        ctx.font = '400 28px "Inter", sans-serif';
-        ctx.fillText(`${i + 1}.`, 152, y);
-
-        // Song name
-        ctx.textAlign = "left";
-        ctx.fillStyle = songText ? "#5B2D8E" : "#D8CCE5";
-        ctx.font = '400 32px "Inter", sans-serif';
-        ctx.fillText(songText || PLACEHOLDER_SONGS[i], 176, y);
-      }
-
-      // --- User name (bottom left) ---
-      if (userName.trim()) {
-        ctx.textAlign = "left";
-        ctx.textBaseline = "bottom";
-        ctx.fillStyle = "#5B2D8E";
-        ctx.font = '500 26px "Inter", sans-serif';
-        ctx.fillText(userName, 80, S - 52);
-      }
-
-      // --- Purple Highs logo (bottom right) ---
-      const logoX = S - 138;
-      const logoY = S - 110;
-      const innerR = 50;
-      const outerR = 58;
-
-      ctx.beginPath();
-      ctx.arc(logoX, logoY, outerR, 0, Math.PI * 2);
-      ctx.strokeStyle = "#C4A4DE";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.arc(logoX, logoY, innerR, 0, Math.PI * 2);
-      ctx.strokeStyle = "#5B2D8E";
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
+    // --- User name (bottom left) ---
+    if (userName.trim()) {
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
       ctx.fillStyle = "#5B2D8E";
-      ctx.font = 'italic 700 20px "Playfair Display", serif';
-      ctx.fillText("Purple", logoX, logoY - 10);
+      ctx.font = '500 26px "Inter", sans-serif';
+      ctx.fillText(userName, 80, S - 52);
+    }
 
-      ctx.fillStyle = "#C4A84D";
-      ctx.font = 'italic 700 20px "Playfair Display", serif';
-      ctx.fillText("Highs", logoX, logoY + 14);
+    // --- Purple Highs logo (bottom right) ---
+    const logoX = S - 138;
+    const logoY = S - 110;
 
-      // --- Glow effect on card ---
-      setGlowing(true);
-      setTimeout(() => setGlowing(false), 800);
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, 58, 0, Math.PI * 2);
+    ctx.strokeStyle = "#C4A4DE";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
-      // --- Download ---
+    ctx.beginPath();
+    ctx.arc(logoX, logoY, 50, 0, Math.PI * 2);
+    ctx.strokeStyle = "#5B2D8E";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#5B2D8E";
+    ctx.font = 'italic 700 20px "Playfair Display", serif';
+    ctx.fillText("Purple", logoX, logoY - 10);
+    ctx.fillStyle = "#C4A84D";
+    ctx.font = 'italic 700 20px "Playfair Display", serif';
+    ctx.fillText("Highs", logoX, logoY + 14);
+
+    return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = "My10PrinceSongs.png";
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setGenerated(true);
-        setIsGenerating(false);
+        if (blob) resolve(blob);
+        else reject(new Error("Failed to generate image"));
       }, "image/png");
+    });
+  }, [songs, userName]);
+
+  // Check if native share (with files) is supported
+  const canShare = typeof navigator !== "undefined" &&
+    !!navigator.share &&
+    !!navigator.canShare;
+
+  // Primary action: Share on mobile, Copy on desktop
+  const handlePrimaryAction = async () => {
+    setIsGenerating(true);
+    try {
+      const blob = await generateImage();
+
+      if (canShare) {
+        // Mobile: use native share sheet
+        const file = new File([blob], "My10PrinceSongs.png", { type: "image/png" });
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: "#My10PrinceSongs",
+            text: "My Top 10 Prince Songs #My10PrinceSongs",
+          });
+          setGlowing(true);
+          setTimeout(() => setGlowing(false), 800);
+          setGenerated(true);
+          setIsGenerating(false);
+          return;
+        }
+      }
+
+      // Desktop: copy image to clipboard
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob }),
+        ]);
+        setGlowing(true);
+        setTimeout(() => setGlowing(false), 800);
+        setGenerated(true);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        setIsGenerating(false);
+      } catch {
+        // Clipboard API not supported — fall back to download
+        downloadBlob(blob);
+      }
     } catch {
-      alert("Something went wrong generating your image. Please try again.");
+      alert("Something went wrong. Please try again.");
       setIsGenerating(false);
     }
+  };
+
+  // Secondary action: plain download
+  const handleDownload = async () => {
+    setIsGenerating(true);
+    try {
+      const blob = await generateImage();
+      downloadBlob(blob);
+    } catch {
+      alert("Something went wrong. Please try again.");
+      setIsGenerating(false);
+    }
+  };
+
+  const downloadBlob = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = "My10PrinceSongs.png";
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setGlowing(true);
+    setTimeout(() => setGlowing(false), 800);
+    setGenerated(true);
+    setIsGenerating(false);
   };
 
   return (
@@ -586,10 +640,11 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Download area */}
+      {/* Action area */}
       <div className="w-full max-w-md px-6 pt-6 sm:pt-8 pb-4 animate-fade-up-delay flex flex-col items-center gap-3">
+        {/* Primary button: Share (mobile) or Copy Image (desktop) */}
         <button
-          onClick={handleDownload}
+          onClick={handlePrimaryAction}
           disabled={filledCount === 0 || isGenerating}
           className={`btn-download w-full py-4 px-6 rounded-2xl text-base tracking-wide ${
             generated ? "btn-success" : ""
@@ -597,16 +652,33 @@ export default function Home() {
         >
           {isGenerating
             ? "Creating your image..."
-            : generated
-              ? "Saved! Tap to download again"
-              : filledCount === 0
-                ? "Enter your songs above"
-                : "Download PNG"}
+            : copied
+              ? "✓ Copied to clipboard!"
+              : generated
+                ? canShare
+                  ? "Share again"
+                  : "✓ Copied! Share again"
+                : filledCount === 0
+                  ? "Enter your songs above"
+                  : canShare
+                    ? "Share Your Top 10"
+                    : "Copy Image"}
         </button>
+
+        {/* Secondary: Download link */}
+        {filledCount > 0 && (
+          <button
+            onClick={handleDownload}
+            disabled={isGenerating}
+            className="text-purple-muted/50 text-sm hover:text-purple-muted/80 transition-colors underline underline-offset-2 cursor-pointer bg-transparent border-none"
+          >
+            or download as PNG
+          </button>
+        )}
 
         {generated && (
           <p className="text-purple-muted/80 text-sm text-center animate-fade-in">
-            Now post it with{" "}
+            Post it with{" "}
             <span
               className="text-purple-muted font-semibold cursor-pointer hover:text-white transition-colors"
               onClick={() => {
@@ -622,7 +694,7 @@ export default function Home() {
 
         {!generated && filledCount > 0 && filledCount < 10 && (
           <p className="text-purple-muted/50 text-xs text-center">
-            {filledCount}/10 &mdash; you can download anytime
+            {filledCount}/10 &mdash; you can share anytime
           </p>
         )}
       </div>
