@@ -16,6 +16,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://10-prince-songs.vercel.app"),
   title: "#My10PrinceSongs - Share Your Top 10 Prince Songs",
   description:
     "What are your Top 10 Prince songs? Create and share a beautiful graphic for the 10-year anniversary. April 21, 2026.",
