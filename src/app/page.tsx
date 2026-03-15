@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import html2canvas from "html2canvas-pro";
 
 const PLACEHOLDER_SONGS = [
   "Purple Rain",
@@ -22,7 +21,6 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const graphicRef = useRef<HTMLDivElement>(null);
-  const captureRef = useRef<HTMLDivElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [previewScale, setPreviewScale] = useState(0.5);
@@ -70,37 +68,121 @@ export default function Home() {
   );
 
   const handleDownload = async () => {
-    if (!captureRef.current) return;
     setIsGenerating(true);
 
     try {
-      // Wait for fonts to load
       await document.fonts.ready;
 
-      // Make the offscreen capture element visible (but still offscreen) for html2canvas
-      const el = captureRef.current;
-      el.style.display = "block";
+      const S = 1080;
+      const canvas = document.createElement("canvas");
+      canvas.width = S;
+      canvas.height = S;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas not supported");
 
-      // Give the browser a frame to lay it out
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      // --- White background ---
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, S, S);
 
-      const canvas = await html2canvas(el, {
-        scale: 1,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        width: 1080,
-        height: 1080,
-      });
+      // --- Title ---
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#5B2D8E";
+      ctx.font = 'italic 900 72px "Playfair Display", serif';
+      ctx.fillText("#My10PrinceSongs", S / 2, 108);
 
-      el.style.display = "none";
+      // --- Divider line (gradient) ---
+      const grad = ctx.createLinearGradient(80, 0, S - 80, 0);
+      grad.addColorStop(0, "transparent");
+      grad.addColorStop(0.2, "#C4A4DE");
+      grad.addColorStop(0.5, "#7B4FAF");
+      grad.addColorStop(0.8, "#C4A4DE");
+      grad.addColorStop(1, "transparent");
+      ctx.fillStyle = grad;
+      ctx.fillRect(80, 132, S - 160, 2);
 
-      const link = document.createElement("a");
-      link.download = "My10PrinceSongs.png";
-      link.href = canvas.toDataURL("image/png", 1.0);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setGenerated(true);
+      // --- Song list ---
+      const listTop = 192;
+      const listBottom = S - 160;
+      const rowHeight = (listBottom - listTop) / 10;
+
+      ctx.textBaseline = "middle";
+
+      for (let i = 0; i < 10; i++) {
+        const y = listTop + rowHeight * i + rowHeight / 2;
+        const songText = songs[i]?.trim() || "";
+
+        // Number
+        ctx.textAlign = "right";
+        ctx.fillStyle = "#5B2D8E";
+        ctx.font = '400 28px "Inter", sans-serif';
+        ctx.fillText(`${i + 1}.`, 152, y);
+
+        // Song name
+        ctx.textAlign = "left";
+        if (songText) {
+          ctx.fillStyle = "#5B2D8E";
+          ctx.font = '400 32px "Inter", sans-serif';
+        } else {
+          ctx.fillStyle = "#D8CCE5";
+          ctx.font = '400 32px "Inter", sans-serif';
+        }
+        ctx.fillText(songText || PLACEHOLDER_SONGS[i], 172, y);
+      }
+
+      // --- User name (bottom left) ---
+      if (userName.trim()) {
+        ctx.textAlign = "left";
+        ctx.textBaseline = "bottom";
+        ctx.fillStyle = "#5B2D8E";
+        ctx.font = '500 26px "Inter", sans-serif';
+        ctx.fillText(userName, 80, S - 60);
+      }
+
+      // --- Purple Highs logo (bottom right) ---
+      const logoX = S - 140;
+      const logoY = S - 118;
+      const innerR = 50;
+      const outerR = 58;
+
+      // Outer decorative ring
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, outerR, 0, Math.PI * 2);
+      ctx.strokeStyle = "#C4A4DE";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Inner ring
+      ctx.beginPath();
+      ctx.arc(logoX, logoY, innerR, 0, Math.PI * 2);
+      ctx.strokeStyle = "#5B2D8E";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // "Purple" text
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = "#5B2D8E";
+      ctx.font = 'italic 700 20px "Playfair Display", serif';
+      ctx.fillText("Purple", logoX, logoY - 10);
+
+      // "Highs" text
+      ctx.fillStyle = "#C4A84D";
+      ctx.font = 'italic 700 20px "Playfair Display", serif';
+      ctx.fillText("Highs", logoX, logoY + 14);
+
+      // --- Download ---
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = "My10PrinceSongs.png";
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setGenerated(true);
+      }, "image/png");
     } catch {
       alert("Something went wrong generating your image. Please try again.");
     } finally {
@@ -299,22 +381,6 @@ export default function Home() {
         </p>
       </footer>
 
-      {/* Offscreen full-size capture element — hidden, used only for PNG generation */}
-      <div
-        style={{
-          position: "fixed",
-          left: "-9999px",
-          top: 0,
-          display: "none",
-          zIndex: -1,
-        }}
-      >
-        <GraphicTemplate
-          songs={songs}
-          userName={userName}
-          ref={captureRef}
-        />
-      </div>
     </div>
   );
 }
